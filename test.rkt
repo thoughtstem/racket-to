@@ -2,9 +2,9 @@
 
 (require pict/code)
 
-(require "main-python.rkt")
+(require "racket2python.rkt")
 
-(require "main-javascript.rkt")
+(require "racket2javascript.rkt")
  
 (slide
  #:title "Racket+Python+JS"
@@ -13,9 +13,7 @@
                     (define x 5)
                     (define (f) 5)
                     (define color (if #t "red" "blue"))
-                    (define age (cond ([stephen 4]
-                                      [sara 5]
-                                      [lindsey 6])))
+                   
                     (if (and (= 0 x) (dooby x))
                         1
                         (* x
@@ -24,6 +22,23 @@
                   (string-append "Hello " "World")
                   (map my-fact '(1 2 3 4)))
         1))
+
+
+(slide
+ #:title "Racket+Python+JS"
+ (scale-to-fit
+  (polyglot
+         (neo 1 (if (and button-a (not button-b))
+                    '(255 0 0)
+                    '(0 255 0)))
+
+         (neo 2 (if (and button-a (not button-b))
+                    '(255 0 0)
+                    '(0 255 0)))
+
+         )
+        900
+        700))
 
 (define-syntax polyglot
   (syntax-rules ()

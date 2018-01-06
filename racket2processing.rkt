@@ -1,18 +1,19 @@
 #lang racket
 
-(provide python-str)
+(provide processing-str)
 
 (require "racket2blank.rkt")
 
-(define (python-str e)
-  (set-TRUE! "True")
-  (set-FALSE! "False")
+(define (processing-str e)
+  (set-TRUE! "true")
+  (set-FALSE! "false")
 
   (set-operator-translations!
    '(
      (remainder . %)
      (expt . **)
      (eq? . is)
+     (and . &&)
      (append . +)
      (list-ref . index)
      (string-append . +)))
@@ -28,6 +29,8 @@
                ((not) . 4)
                ((in is < <= > >= == eq?) . 5)
 
+               ((&&) . 3)
+            
                ((+) . 9.5) ;To deal with 1-(2+3)
                ((+ -) . 10)
                ((*) . 10.5) ;To deal with 1/(2*3)
@@ -40,21 +43,24 @@
   (set-compile-function!
    (lambda (indent return? name params body)
      (advance indent)
-     (printf "def ~A(" (my-lang-name name))
+     (printf "void ~A(" (my-lang-name name))
      (let ((params
             (if (symbol? params)
                 (begin
                   (printf "*~A" (my-lang-name params))
                   (list params))
                 (my-lang-parameters params))))
-       (printf "):~%")
+       (printf "){~%")
        (parameterize ((locals (append (locals) params)))
-         (my-lang-statements body (+ indent 4) (include-return?))))))
+         (my-lang-statements body (+ indent 4) (include-return?))))
+     (newline)
+     (advance indent)
+     (printf "}")))
 
   (set-compile-set-var!
    (lambda (indent return? name init)
      (advance indent)
-     (printf "~A = " (my-lang-name name))
+     (printf "var ~A = " (my-lang-name name))
      (my-lang-expression init)))
 
 
@@ -63,12 +69,18 @@
      (advance indent)
      (printf "if(")
      (my-lang-expression test)
-     (printf "):~%")
+     (printf "){~%")
      (my-lang-statement conseq (+ indent 4) return?)
      (newline)
      (advance indent)
-     (printf "else:~%")
-     (my-lang-statement altern (+ indent 4) return?)))
+     (printf "}")
+     (newline)
+     (advance indent)
+     (printf "else{~%")
+     (my-lang-statement altern (+ indent 4) return?)
+     (newline)
+     (advance indent)
+     (printf "}")))
 
   (set-compile-if-else-if-statement!
    (lambda (indent return? test clause clauses )
@@ -77,22 +89,23 @@
        (`(,test . ,stmts)
         (printf "if(")
         (my-lang-expression test)
-        (printf "):~%")
+        (printf "){~%")
         (my-lang-statements stmts (+ indent 4) return?)
+        (printf "}")
         ))
      (for ((clause clauses))
        (newline)
        (advance indent)
        (match clause
          (`(else . ,stmts)
-          (printf "else:~%")
+          (printf "else{~%")
           (my-lang-statements stmts (+ indent 4) return?))
          (`(,test . ,stmts)
-          (printf "elif")
+          (printf "}else if(")
           (my-lang-expression test)
-          (printf ":~%")
+          (printf "){~%")
           (my-lang-statements stmts (+ indent 4) return?)
-
+          (printf "}")
           )
          (`...
           (printf "..."))))))
@@ -115,7 +128,12 @@
        (`(foldl ,f ,i ,l)
         (rec `(reduce ,f ,l ,i))
         #t)
-       
+       (`(map ,f ,l)
+        (my-lang-expression l)
+        (display ".map(")
+        (my-lang-expression f)
+        (display ")")
+        #t)
        (`(string-join ,strs ,el)
         (rec `(attribute ,el (join ,strs)))
         #t)
@@ -124,10 +142,10 @@
   (set-compile-inline-if!
    (lambda (e rec precedence test conseq altern)
      (maybe-paren ('if op-precedence precedence)
+                  (my-lang-expression test (+ 0.5 op-precedence))
+                  (display " ? ")
                   (my-lang-expression conseq (+ 0.5 op-precedence))
-                  (display " if ")
-                  (my-lang-expression test (+ 0.5 op-precedence)) 
-                  (display " else ")
+                  (display " : ")
                   (my-lang-expression altern (+ 0.5 op-precedence)))))
 
 
