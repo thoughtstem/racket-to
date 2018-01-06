@@ -4,7 +4,9 @@
 
 (require "racket2blank.rkt")
 
+
 (define (processing-str e)
+  (set-statement-end-token! ";" )
   (set-TRUE! "true")
   (set-FALSE! "false")
 
@@ -42,8 +44,11 @@
 
   (set-compile-function!
    (lambda (indent return? name params body)
+     (define f-type (or (detect-type (symbol->string name) 'void)
+                          "void"))
      (advance indent)
-     (printf "void ~A(" (my-lang-name name))
+     (printf "~a ~A(" f-type
+             (my-lang-name name))
      (let ((params
             (if (symbol? params)
                 (begin
@@ -52,7 +57,9 @@
                 (my-lang-parameters params))))
        (printf "){~%")
        (parameterize ((locals (append (locals) params)))
-         (my-lang-statements body (+ indent 4) (include-return?))))
+         (my-lang-statements body (+ indent 4) (if (eq? f-type "void")
+                                                   #f
+                                                   (include-return?)))))
      (newline)
      (advance indent)
      (printf "}")))
@@ -60,8 +67,25 @@
   (set-compile-set-var!
    (lambda (indent return? name init)
      (advance indent)
-     (printf "var ~A = " (my-lang-name name))
+     (printf "~a ~A = " (detect-type (symbol->string name) init) (my-lang-name name))
      (my-lang-expression init)))
+
+  (define (detect-type name v)
+    (or
+        (name-detection name)
+        (value-detection v)))
+
+  (define (value-detection v)
+    (cond  [(number? v) "int"]
+           [(string? v) "string"]
+           [(boolean? v) "boolean"]
+           [else #f]))
+
+  (define (name-detection name)
+    (cond [(regexp-match #rx"^string:" name) "string"]
+          [(regexp-match #rx"^int:" name) "int"]
+          [(regexp-match #rx"^bool:" name) "int"]
+          [else #f]))
 
 
   (set-compile-if-else-statement!

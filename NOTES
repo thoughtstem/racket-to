@@ -1,0 +1,26 @@
+
+Tech Hierarchy:
+
+1) In DrRacket, Coding in Racket, Racket Runtime (htdp, adults, etc.)
+   Currently - ADULTS
+2) In DrRacket, Coding in Racket, compiler->other runtime (Minetest, C+E) 
+3) In DrRacket, Coding in Racket, compiler->other runtime, edit compiled code in native language (VR HTML A-Frame)
+   Currently - ELEMENTARY
+4) In DrRacket, Coding in ______, Racket Runtime (ProfJ)
+5) In DrRacket, Coding in Racket, Also coding in ????? elsewhere (Processing, HTML, VR, Etc)
+   * Racket is demo language. Puzzle language. Etc.
+
+6) Not in DrRacket at all (K-2 courses...)
+   * Make visual editor, though, and can switch them over to all above topics...
+
+
+Delivery:
+
+K-2: 1 pagers
+3-5: Card quests
+6+ : Slideshows + Challenges
+
+TODO, do a few different topics with above...:
+  * A few slides of Processing curriculum
+  * A few slides of advanced Minetest curriculum
+

@@ -28,14 +28,25 @@
 (compile-hook spacey-operators)
 (compile-hook operator-translations)
 (compile-hook compile-inline-if)
+(compile-hook compile-mutate-var)
 
+(compile-hook statement-end-token) (set-statement-end-token! "")
+
+(set-compile-mutate-var!
+ (lambda (indent return? name init)
+   (advance indent)
+   (printf "~A = " (my-lang-name name))
+   (my-lang-expression init)))
 
 (define (my-lang-name name)
   (let ((str (symbol->string name)))
-    (string-replace
-     str
-     "-"
-     "_")))
+    (regexp-replace
+     #rx".*:"
+     (string-replace
+      str
+      "-"
+      "_")
+     "")))
 
 (define (advance n)
   (for ((i n))
@@ -64,26 +75,48 @@
 
 (define (my-lang-statement stmt [indent 0] [return? #f])
   (match stmt
+    ('code:blank
+       (void))
     ((or `(define (,name . ,params) : ,_ . ,body)
          `(define (,name . ,params) . ,body))
      (compile-function indent return? name params body))
+     
     ((or `(define ,name ,init)
          `(define ,name : ,_ ,init))
-     (compile-set-var indent return? name init))
+     (compile-set-var indent return? name init)
+     (display statement-end-token))
+    (`(set! ,id ,v)
+     (compile-mutate-var indent return? id v)
+     (display statement-end-token)
+     )
     (`(if ,test ,conseq ,altern)
      (compile-if-else-statement indent return? test conseq altern))
     (`(cond ,clause . ,clauses)
      (compile-if-else-if-statement indent return? clause clauses))
     (`(begin ,stmt . ,stmts)
-     (compile-begin indent return? stmt stmts))
+     (compile-begin indent return? stmt stmts)
+     )
     (`(error . ,_)
-     (my-lang-maybe-indent-expression "raise " stmt indent))
+     (my-lang-maybe-indent-expression "raise " stmt indent)
+     (display statement-end-token))
     (else
-     (my-lang-maybe-indent-expression (if return? "return " "") stmt indent))))
+     (my-lang-maybe-indent-expression (if return? "return " "") stmt indent)
+     (display statement-end-token)))
+   )
 
 
 (define (my-lang-statements stmts indent [return? #f])
-  (let ((first? #t))
+  (define num (length stmts))
+  (map (lambda (stmt i)
+         (my-lang-statement stmt indent (if (< i num) #f return?)) ;No returns until the last statement
+         (or (= i (- num 1))                                       ;Newlines after all statements but the last
+             (newline))
+         )
+       stmts
+       (range num)))
+
+#;(
+  (let ([first? #t])
     (for ((stmt (drop-right stmts 1)))
       (cond (first?
              (my-lang-statement stmt indent)
