@@ -1,28 +1,29 @@
 
-
 Make lecture into a class-wide game.
   Keep score? Display score?  Give way to inc counter?
-
-Take a moment to look into the (interactive) function for slideshow.
-  Lots of opportunity there...
 
 
 Processing Curriculum:
 
 Framing slides:
-  Socratic method...
   Racket vs __Other Lang__
   Syntax vs Semantics
 
+Additional rules:
+  (Call on people randomly...) -- Pull from rails?  Or enter beforehand?
+  (Break into groups and discuss...)
+
 Slideshow...
+  (Some opportunity to look at the code snippets before the timer comes up...)
   (Activity: Socratic session.  For snippet X...)
+    (How many functions? DONE.  Similar questions?)
     (Compare syntax...  What do we notice?)
     (What is different from last code?  Look at paper.)
     (What line runs first?)
-    (What do we thing will happen?)
-    (Demo...)
   (Concept slides?)
-  (Embed video?)
+    (History)
+    (Google something slide.)
+  (Embed video? Or pop up?)
   Intro
   Exercises
   Demos
