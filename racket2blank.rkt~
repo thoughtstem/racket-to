@@ -30,12 +30,6 @@
 (compile-hook compile-inline-if)
 (compile-hook compile-mutate-var)
 
-(compile-hook unparse-parameter)
-(set-unparse-parameter!
-      (lambda (param)
-        (display (my-lang-name param))
-        param))
-
 (compile-hook statement-end-token) (set-statement-end-token! "")
 
 (set-compile-mutate-var!
@@ -60,7 +54,9 @@
 
        
 
-
+(define (unparse-parameter param)
+  (display (my-lang-name param))
+  param)
 
 (define (my-lang-parameters params)
   (cond ((null? params)
@@ -70,8 +66,6 @@
                (for/list ((param (cdr params)))
                  (display ", ")
                  (unparse-parameter param))))))
-
-
 
 (define locals (make-parameter (list)))
 
@@ -171,8 +165,8 @@
            (parameterize ((break-line? #f)) (my-lang-expression (first args)))
            (for ((arg (rest args)))
              (display ",")
-             ;(newline)          ;Makes processing look weird.  Was this necessary for something??
-             ;(advance column)
+             (newline)
+             (advance column)
              (parameterize ((break-line? #f)) (my-lang-expression arg)))))
         (else
          (my-lang-expressions args)))
@@ -187,8 +181,6 @@
    (match e
      (`(if ,test ,conseq ,altern)
       (compile-inline-if e rec precedence test conseq altern))
-
-     ('(void) (display ""))
      
      (`(,(? (lambda (op) (dict-has-key? operator-translations op)) op) . ,args)
       (rec `(,(dict-ref operator-translations op) . ,args)))
@@ -247,9 +239,9 @@
       (if (string-contains? x "\'")
           (print x)
           (begin
-            (display "\"")
+            (display "'")
             (display x)
-            (display "\""))))
+            (display "'"))))
      ((or #t `\#t) ;;to also handle latex
       (if (include-return?)
           (display TRUE)

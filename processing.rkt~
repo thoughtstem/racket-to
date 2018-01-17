@@ -49,12 +49,12 @@
      (advance indent)
      (printf "~a ~A(" f-type
              (my-lang-name name))
-     (let ([params
+     (let ((params
             (if (symbol? params)
                 (begin
                   (printf "*~A" (my-lang-name params))
                   (list params))
-                (my-lang-parameters params))])
+                (my-lang-parameters params))))
        (printf "){~%")
        (parameterize ((locals (append (locals) params)))
          (my-lang-statements body (+ indent 4) (if (eq? f-type "void")
@@ -70,29 +70,22 @@
      (printf "~a ~A = " (detect-type (symbol->string name) init) (my-lang-name name))
      (my-lang-expression init)))
 
-  (set-unparse-parameter!
-      (lambda (param)
-        (printf "~a ~a" (detect-type (symbol->string param) 'novalueknown) (my-lang-name param))
-        param))
-
   (define (detect-type name v)
     (or
         (name-detection name)
         (value-detection v)))
 
   (define (value-detection v)
-    (cond  [(and (number? v) (integer? v)) "int"]
-           [(number? v) "float"]
-           [(and (list? v) (eq? (first v) 'loadImage)) "PImage"]
+    (cond  [(number? v) "int"]
            [(string? v) "string"]
            [(boolean? v) "boolean"]
            [else #f]))
 
   (define (name-detection name)
-    (define matches (regexp-match #rx"(.*):(.*)" name))
-    (if (not matches)
-        #f
-        (second matches)))
+    (cond [(regexp-match #rx"^string:" name) "string"]
+          [(regexp-match #rx"^int:" name) "int"]
+          [(regexp-match #rx"^bool:" name) "int"]
+          [else #f]))
 
 
   (set-compile-if-else-statement!
