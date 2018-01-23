@@ -29,6 +29,7 @@
 (compile-hook operator-translations)
 (compile-hook compile-inline-if)
 (compile-hook compile-mutate-var)
+(compile-hook compile-import)
 
 (compile-hook unparse-parameter)
 (set-unparse-parameter!
@@ -83,6 +84,9 @@
   (match stmt
     ('code:blank
        (void))
+    (`(require ,id)
+      (compile-import id))
+    
     ((or `(define (,name . ,params) : ,_ . ,body)
          `(define (,name . ,params) . ,body))
      (compile-function indent return? name params body))
@@ -114,25 +118,12 @@
 (define (my-lang-statements stmts indent [return? #f])
   (define num (length stmts))
   (map (lambda (stmt i)
-         (my-lang-statement stmt indent (if (< i num) #f return?)) ;No returns until the last statement
-         (or (= i (- num 1))                                       ;Newlines after all statements but the last
+         (my-lang-statement stmt indent (if (= i (- num 1)) return? #f)) ;No returns until the last statement
+         (or (= i (- num 1))                                         ;Newlines after all statements but the last
              (newline))
          )
        stmts
        (range num)))
-
-#;(
-  (let ([first? #t])
-    (for ((stmt (drop-right stmts 1)))
-      (cond (first?
-             (my-lang-statement stmt indent)
-             (set! first? #f))
-            (else
-             (newline)
-             (my-lang-statement stmt indent))))
-    (unless first? (newline))
-    (my-lang-statement (last stmts) indent return?)))
-
 
 
 
@@ -187,7 +178,9 @@
    (match e
      (`(if ,test ,conseq ,altern)
       (compile-inline-if e rec precedence test conseq altern))
-
+     (`(new ,expr)
+      (printf "new ")
+      (rec expr))
      ('(void) (display ""))
      
      (`(,(? (lambda (op) (dict-has-key? operator-translations op)) op) . ,args)
@@ -207,11 +200,19 @@
                        (display op) 
                        (when space? (display " "))
                        (my-lang-expression arg op-precedence)))))
+
+     ((list 'quote x)
+      (display (format "'~a'" x)))
      
      (`(list . ,args)
       (display "[")
       (my-lang-expressions args)
       (display "]"))
+
+     (`(list-ref ,l ,i)
+      (rec l)
+      (printf "[") (rec i) (printf "]")
+      )
      
      (`'()
       (rec `(list)))
@@ -251,14 +252,11 @@
             (display x)
             (display "\""))))
      ((or #t `\#t) ;;to also handle latex
-      (if (include-return?)
-          (display TRUE)
-          (display "pass")))
+      (display TRUE))
      ((or #f `\#f)
-      (display FALSE)) 
+      (display FALSE))
      ((? symbol? x)
       (display (my-lang-name x)))
-
      )))
 
 

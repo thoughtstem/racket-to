@@ -14,10 +14,9 @@
    '(
      (remainder . %)
      (expt . **)
-     (eq? . is)
+     (eq? . ==)
      (and . &&)
      (append . +)
-     (list-ref . index)
      (string-append . +)))
 
   (set-operator-precedence!
@@ -42,6 +41,10 @@
                ((tuple list dict) . 15))
              member))))
 
+  (set-compile-import!
+    (lambda (id)
+      (printf (format "import ~a;" id))))
+  
   (set-compile-function!
    (lambda (indent return? name params body)
      (define f-type (or (detect-type (symbol->string name) 'void)
@@ -59,7 +62,7 @@
        (parameterize ((locals (append (locals) params)))
          (my-lang-statements body (+ indent 4) (if (eq? f-type "void")
                                                    #f
-                                                   (include-return?)))))
+                                                   #t))))
      (newline)
      (advance indent)
      (printf "}")))
@@ -92,7 +95,13 @@
     (define matches (regexp-match #rx"(.*):(.*)" name))
     (if (not matches)
         #f
-        (second matches)))
+        (handle-array-type (second matches))))
+
+  (define (handle-array-type t)
+     (define matches (regexp-match #rx"(.*)Arr" t))
+     (if (not matches)
+         t
+         (format "~a []" (second matches))))
 
 
   (set-compile-if-else-statement!
@@ -114,7 +123,7 @@
      (printf "}")))
 
   (set-compile-if-else-if-statement!
-   (lambda (indent return? test clause clauses )
+   (lambda (indent return? clause clauses )
      (advance indent)
      (match clause
        (`(,test . ,stmts)
@@ -130,12 +139,17 @@
        (match clause
          (`(else . ,stmts)
           (printf "else{~%")
-          (my-lang-statements stmts (+ indent 4) return?))
+          (my-lang-statements stmts (+ indent 4) return?)
+          (newline)
+          (advance indent)
+          (printf "}"))
          (`(,test . ,stmts)
-          (printf "}else if(")
+          (printf "else if(")
           (my-lang-expression test)
           (printf "){~%")
           (my-lang-statements stmts (+ indent 4) return?)
+          (newline)
+          (advance indent)
           (printf "}")
           )
          (`...
@@ -184,6 +198,6 @@
    '(or and is ** * / // % + - < > <= >= == &&))
 
   (set-spacey-operators!
-   '(is + - < > <= >= == or and &&))
+   '(+ - < > <= >= == or and &&))
 
   (my-lang-str e))
