@@ -104,6 +104,19 @@
          (format "~a []" (second matches))))
 
 
+  (set-compile-while-loop!
+   (lambda (indent return? test conseq)
+     (advance indent)
+     (printf "while(")
+     (my-lang-expression test)
+     (printf "){~%")
+     (my-lang-statement conseq (+ indent 4) return?)
+     (newline)
+     (advance indent)
+     (printf "}")
+     (newline)))
+
+
   (set-compile-if-else-statement!
    (lambda (indent return? test conseq altern)
      (advance indent)

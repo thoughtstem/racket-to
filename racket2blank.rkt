@@ -15,6 +15,7 @@
            (define (setter v)
              (set! id v))))]))
 
+(compile-hook compile-while-loop)
 (compile-hook compile-if-else-statement)
 (compile-hook compile-if-else-if-statement)
 (compile-hook compile-begin)
@@ -101,6 +102,8 @@
      )
     (`(if ,test ,conseq ,altern)
      (compile-if-else-statement indent return? test conseq altern))
+    (`(while ,test ,conseq)
+     (compile-while-loop indent return? test conseq))
     (`(cond ,clause . ,clauses)
      (compile-if-else-if-statement indent return? clause clauses))
     (`(begin ,stmt . ,stmts)
